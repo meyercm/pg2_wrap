@@ -97,6 +97,7 @@ defmodule Pg2 do
   ## Differences from :pg2
   - defaults the pid to `self()`
   - returns `:ok` if the group does not exist
+  - deletes the group if it is empty
   """
   @spec leave(group_name) :: :ok
   @spec leave(group_name, pid|:self) :: :ok
@@ -105,10 +106,14 @@ defmodule Pg2 do
       :self -> self()
       other -> other
     end
-    case :pg2.leave(group_name, leaving_pid) do
+    result = case :pg2.leave(group_name, leaving_pid) do
       {:error, _} -> :ok
       other -> other
     end
+    if get_members(group_name) == [] do
+      delete(group_name)
+    end
+    result
   end
 
   @doc """

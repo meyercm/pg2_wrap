@@ -37,6 +37,11 @@ defmodule Pg2Spec do
       it "defaults to self() for pid" do
         expect Pg2.leave(shared.group_name) |> to(eq :ok)
       end
+      it "deletes the group if it has no members" do
+        Pg2.join(shared.group_name)
+        Pg2.leave(shared.group_name)
+        expect :pg2.which_groups |> to(eq [])
+      end
     end
   end
 
@@ -44,9 +49,9 @@ defmodule Pg2Spec do
     specify "other pids for leave and join can still be provided" do
       pid = Process.spawn(fn -> Process.sleep(100) end, [])
       expect Pg2.join(shared.group_name, pid)    |> to(eq :ok)
-      expect :pg2.get_members(shared.group_name) |> to(eq [pid])
+      expect Pg2.get_members(shared.group_name) |> to(eq [pid])
       expect Pg2.leave(shared.group_name, pid)   |> to(eq :ok)
-      expect :pg2.get_members(shared.group_name) |> to(eq [])
+      expect Pg2.get_members(shared.group_name) |> to(eq [])
     end
   end
 end
